@@ -15,7 +15,7 @@ using DomUpdates_1;
 
 
 [GQIMetaData(Name = "Incidents")]
-public class DOMIncidentDataSource : IGQIDataSource, IGQIOnInit, IGQIOnPrepareFetch, IGQIUpdateable
+public class DOMIncidentDataSource : IGQIDataSource, IGQIOnInit, IGQIUpdateable
 {
     private static readonly GQIStringColumn _nameColumn = new GQIStringColumn("Name");
     private static readonly GQIIntColumn _impactColumn = new GQIIntColumn("Impact");
@@ -30,13 +30,6 @@ public class DOMIncidentDataSource : IGQIDataSource, IGQIOnInit, IGQIOnPrepareFe
     {
         _dms = args.DMS;
         return new OnInitOutputArgs();
-    }
-
-    public OnPrepareFetchOutputArgs OnPrepareFetch(OnPrepareFetchInputArgs args)
-    {
-        _watcher = new DOMWatcher("incidents", _dms);
-        _watcher.OnChanged += Watcher_OnChanged;
-        return new OnPrepareFetchOutputArgs();
     }
 
     private void Watcher_OnChanged(object sender, DomInstancesChangedEventMessage e)
@@ -74,6 +67,8 @@ public class DOMIncidentDataSource : IGQIDataSource, IGQIOnInit, IGQIOnPrepareFe
     {
         // Log("Start updates.");
         _updater = updater;
+        _watcher = new DOMWatcher("incidents", _dms);
+        _watcher.OnChanged += Watcher_OnChanged;
     }
 
     public void StopUpdates()
