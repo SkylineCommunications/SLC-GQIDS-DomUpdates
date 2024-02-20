@@ -1,17 +1,13 @@
-using System.Linq;
-using Skyline.DataMiner.Analytics.GenericInterface;
-using Skyline.DataMiner.Net.Messages;
 using System;
-using System.IO;
-using Skyline.DataMiner.Net;
-using Skyline.DataMiner.Net.Exceptions;
+using System.Linq;
+
+using DomUpdates_1;
+
+using Skyline.DataMiner.Analytics.GenericInterface;
 using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
-using Skyline.DataMiner.Net.SubscriptionFilters;
+using Skyline.DataMiner.Net.Messages;
 using Skyline.DataMiner.Net.Messages.SLDataGateway;
 using Skyline.DataMiner.Net.Sections;
-using Skyline.DataMiner.Net.LogHelpers;
-using SLDataGateway.API.Types.Results.Paging;
-using DomUpdates_1;
 
 
 [GQIMetaData(Name = "Incidents")]
@@ -63,7 +59,7 @@ public class DOMIncidentDataSource : IGQIDataSource, IGQIOnInit, IGQIUpdateable
         return new GQIPage(rows.ToArray()) { HasNextPage = false };
     }
 
-    public void StartUpdates(IGQIUpdater updater)
+    public void OnStartUpdates(IGQIUpdater updater)
     {
         // Log("Start updates.");
         _updater = updater;
@@ -71,7 +67,7 @@ public class DOMIncidentDataSource : IGQIDataSource, IGQIOnInit, IGQIUpdateable
         _watcher.OnChanged += Watcher_OnChanged;
     }
 
-    public void StopUpdates()
+    public void OnStopUpdates()
     {
         // Log("Stop updates.");
         _watcher.Dispose();

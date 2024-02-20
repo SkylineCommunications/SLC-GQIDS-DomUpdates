@@ -1,13 +1,13 @@
-﻿using Skyline.DataMiner.Analytics.GenericInterface;
-using Skyline.DataMiner.Net.Messages;
-using Skyline.DataMiner.Net.SubscriptionFilters;
-using Skyline.DataMiner.Net;
-using System;
-
-namespace DomUpdates_1
+﻿namespace DomUpdates_1
 {
+	using System;
 
-    internal class DOMWatcher : IDisposable
+	using Skyline.DataMiner.Analytics.GenericInterface;
+	using Skyline.DataMiner.Net;
+	using Skyline.DataMiner.Net.Messages;
+	using Skyline.DataMiner.Net.SubscriptionFilters;
+
+	internal class DOMWatcher : IDisposable
     {
         private Connection _connection = null;
 
