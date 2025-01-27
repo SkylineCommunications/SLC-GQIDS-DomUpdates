@@ -1,26 +1,22 @@
 ﻿namespace DomUpdates_1
 {
-	using System;
+    using Skyline.DataMiner.Analytics.GenericInterface;
+    using Skyline.DataMiner.Net;
+    using Skyline.DataMiner.Net.Messages;
+    using Skyline.DataMiner.Net.SubscriptionFilters;
+    using System;
 
-	using Skyline.DataMiner.Analytics.GenericInterface;
-	using Skyline.DataMiner.Net;
-	using Skyline.DataMiner.Net.Messages;
-	using Skyline.DataMiner.Net.SubscriptionFilters;
-
-	internal class DOMWatcher : IDisposable
+    internal class DOMWatcher : IDisposable
     {
-        private Connection _connection = null;
+        private readonly IConnection _connection = null;
 
         internal DOMWatcher(string module, GQIDMS dms)
         {
-            _connection = ConnectionHelper.CreateConnection(dms);
-            if (_connection == null)
-                throw new GenIfException("Could not create a connection.");
+            _connection = dms.GetConnection();
 
             var subscriptionFilter = new ModuleEventSubscriptionFilter<DomInstancesChangedEventMessage>(module);
             _connection.OnNewMessage += Connection_OnNewMessage;
-            _connection.AddSubscription("1", subscriptionFilter);
-            _connection.SubscribePiggyBacked(null, null);
+            _connection.Subscribe(subscriptionFilter);
 
             // DOMIncidentDataSource.Log("DOMWatcher subscribed.");
         }
@@ -29,8 +25,7 @@
 
         public void Dispose()
         {
-            _connection.Unsubscribe();
-            _connection?.Close();
+            _connection.Dispose();
         }
 
         private void Connection_OnNewMessage(object sender, NewMessageEventArgs e)
