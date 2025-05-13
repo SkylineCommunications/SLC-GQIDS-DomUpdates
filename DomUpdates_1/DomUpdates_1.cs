@@ -18,6 +18,8 @@ public class DOMIncidentDataSource : IGQIDataSource, IGQIOnInit, IGQIUpdateable
     private static SectionDefinitionID _sectionDefinitionID = new SectionDefinitionID(new Guid("cd2a71a1-bc75-4219-af29-05b3104cfc1f"));
     private static FieldDescriptorID _fieldDescriptorID = new FieldDescriptorID(new Guid("b98b6a28-48cb-448f-9ad9-7414fd498f22"));
 
+    private static FilterElement<DomInstance> _definitionFilter = DomInstanceExposers.DomDefinitionId.Equal(new Guid("7bc4bc92-5da6-4a72-8a19-bbd34ed90a79"));
+
     private GQIDMS _dms;
     private DOMWatcher _watcher;
     private IGQIUpdater _updater;
@@ -49,7 +51,7 @@ public class DOMIncidentDataSource : IGQIDataSource, IGQIOnInit, IGQIUpdateable
     public GQIPage GetNextPage(GetNextPageInputArgs args)
     {
         var helper = new DomHelper(_dms.SendMessages, "incidents");
-        var instances = helper.DomInstances.Read(DomInstanceExposers.DomDefinitionId.Equal(new Guid("7bc4bc92-5da6-4a72-8a19-bbd34ed90a79")));
+        var instances = helper.DomInstances.Read(_definitionFilter);
 
         var rows = instances.Select(x =>
         {
@@ -63,7 +65,8 @@ public class DOMIncidentDataSource : IGQIDataSource, IGQIOnInit, IGQIUpdateable
     {
         // Log("Start updates.");
         _updater = updater;
-        _watcher = new DOMWatcher("incidents", _dms);
+
+        _watcher = new DOMWatcher("incidents", _definitionFilter, _dms);
         _watcher.OnChanged += Watcher_OnChanged;
     }
 
