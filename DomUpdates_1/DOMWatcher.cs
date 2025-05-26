@@ -9,7 +9,7 @@
 	using Skyline.DataMiner.Net.Messages.SLDataGateway;
 	using Skyline.DataMiner.Net.SubscriptionFilters;
 
-	internal class DOMWatcher : IDisposable
+	internal class DOMWatcher
 	{
 		private readonly IConnection _connection = null;
 
@@ -45,11 +45,6 @@
 		}
 
 		internal event EventHandler<DomInstancesChangedEventMessage> OnChanged;
-
-		public void Dispose()
-		{
-			_connection.Dispose();
-		}
 
 		private void Connection_OnNewMessage(object sender, NewMessageEventArgs e)
 		{

@@ -73,7 +73,8 @@ public class DOMIncidentDataSource : IGQIDataSource, IGQIOnInit, IGQIUpdateable
     public void OnStopUpdates()
     {
         // Log("Stop updates.");
-        _watcher.Dispose();
+        // No need to dispose the watcher as the underlying connection and its subscriptions are cleaned up automatically by GQI
+        // whenever the end of the life cycle of this data source is reached.
     }
 
     internal GQIRow CreateRow(DomInstance instance)
