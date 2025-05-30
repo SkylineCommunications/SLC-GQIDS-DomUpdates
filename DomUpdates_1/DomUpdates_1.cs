@@ -66,7 +66,7 @@ public class DOMIncidentDataSource : IGQIDataSource, IGQIOnInit, IGQIUpdateable
         // Log("Start updates.");
         _updater = updater;
 
-        _watcher = new DOMWatcher("incidents", _definitionFilter, _dms);
+        _watcher = new DOMWatcher("incidents", _definitionFilter, _dms.GetConnection());
         _watcher.OnChanged += Watcher_OnChanged;
     }
 
@@ -84,7 +84,7 @@ public class DOMIncidentDataSource : IGQIDataSource, IGQIOnInit, IGQIUpdateable
         return new GQIRow(instance.ID.Id.ToString(), new GQICell[]
         {
             new GQICell() { Value = instance.Name },
-            new GQICell() { Value = instance.GetFieldValue<int>(_sectionDefinitionID, _fieldDescriptorID)?.Value}
+            new GQICell() { Value = instance.GetFieldValue<int>(_sectionDefinitionID, _fieldDescriptorID)?.Value},
         })
         { Metadata = rowMetadata };
     }

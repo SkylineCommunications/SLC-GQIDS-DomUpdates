@@ -9,11 +9,17 @@
 	using Skyline.DataMiner.Net.Messages.SLDataGateway;
 	using Skyline.DataMiner.Net.SubscriptionFilters;
 
-	internal class DOMWatcher
+	internal class DOMWatcher : IDisposable
 	{
-		private readonly IConnection _connection = null;
+		private readonly object _lock = new object();
+		private readonly IConnection _connection;
 
-		internal DOMWatcher(string module, FilterElement<DomInstance> filter, GQIDMS dms)
+		private readonly string _subscriptionSetId;
+		private readonly SubscriptionFilter[] _subscriptionFilters;
+
+		private int _subscriberCount;
+
+		internal DOMWatcher(string module, FilterElement<DomInstance> filter, IConnection connection)
 		{
 			if (String.IsNullOrWhiteSpace(module))
 			{
@@ -25,32 +31,85 @@
 				throw new ArgumentNullException(nameof(filter));
 			}
 
-			if (dms == null)
+			if (connection == null)
 			{
-				throw new ArgumentNullException(nameof(dms));
+				throw new ArgumentNullException(nameof(connection));
 			}
 
-			_connection = dms.GetConnection();
+			_connection = connection;
 
-			var subscriptionFilters = new SubscriptionFilter[]
+			_subscriptionSetId = $"DomInstanceSubscription_{nameof(DOMWatcher)}_{Guid.NewGuid()}";
+			_subscriptionFilters = new SubscriptionFilter[]
 			{
 				new ModuleEventSubscriptionFilter<DomInstancesChangedEventMessage>(module),
 				new SubscriptionFilter<DomInstancesChangedEventMessage, DomInstance>(filter),
 			};
-
-			_connection.OnNewMessage += Connection_OnNewMessage;
-			_connection.Subscribe(subscriptionFilters);
-
-			// DOMIncidentDataSource.Log("DOMWatcher subscribed.");
 		}
 
-		internal event EventHandler<DomInstancesChangedEventMessage> OnChanged;
+		internal event EventHandler<DomInstancesChangedEventMessage> OnChanged
+		{
+			add
+			{
+				lock (_lock)
+				{
+					CheckAndSubscribe();
+					Changed += value;
+				}
+			}
+
+			remove
+			{
+				lock (_lock)
+				{
+					Changed -= value;
+					CheckAndUnsubscribe();
+				}
+			}
+		}
+
+		private event EventHandler<DomInstancesChangedEventMessage> Changed;
+
+		public void Dispose()
+		{
+			_connection.ClearSubscriptions(_subscriptionSetId);
+			_connection.OnNewMessage -= Connection_OnNewMessage;
+		}
 
 		private void Connection_OnNewMessage(object sender, NewMessageEventArgs e)
 		{
-			// DOMIncidentDataSource.Log("Connection_OnNewMessage.");
+			if (!e.FromSet(_subscriptionSetId))
+			{
+				// Not for our subscription
+				return;
+			}
+
 			if (e.Message is DomInstancesChangedEventMessage domChange)
-				OnChanged?.Invoke(this, domChange);
+			{
+				Changed?.Invoke(this, domChange);
+			}
+		}
+
+		private void CheckAndSubscribe()
+		{
+			if (_subscriberCount <= 0)
+			{
+				_connection.OnNewMessage += Connection_OnNewMessage;
+				_connection.AddSubscription(_subscriptionSetId, _subscriptionFilters);
+				_connection.Subscribe();
+			}
+
+			_subscriberCount++;
+		}
+
+		private void CheckAndUnsubscribe()
+		{
+			_subscriberCount--;
+
+			if (_subscriberCount <= 0)
+			{
+				_connection.OnNewMessage -= Connection_OnNewMessage;
+				_connection.ClearSubscriptions(_subscriptionSetId);
+			}
 		}
 	}
 }
